@@ -1,0 +1,15 @@
+{
+  "number": 1018,
+  "title": "feat: added widget",
+  "state": "open",
+  "head": {
+    "ref": "add-widget",
+    "sha": "975a876e1e0f33728d8fd670dff7ed7e5926c990"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 4,
+  "from": "add-widget",
+  "to": "master"
+}

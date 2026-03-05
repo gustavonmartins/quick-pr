@@ -16,3 +16,9 @@ go.work
 
 # Build output
 quick-ci
+
+# Test temp files
+.test-tmp/
+
+# HTTP cache
+.quick-ci-cache/

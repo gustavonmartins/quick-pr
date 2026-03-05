@@ -1,0 +1,4 @@
+{
+  "repository": "https://github.com/spacecowboy/Feeder",
+  "commands": ["echo 'test'"]
+}

@@ -1,0 +1,15 @@
+{
+  "number": 347,
+  "title": "Fix the scaling of small thumbnails",
+  "state": "open",
+  "head": {
+    "ref": "fix-thumbnails",
+    "sha": "9463fc3e3e97d7872e84c8a5ab0a033682dbda57"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "fix-thumbnails",
+  "to": "master"
+}

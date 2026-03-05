@@ -1,0 +1,15 @@
+{
+  "number": 936,
+  "title": "chore(deps): update compiler",
+  "state": "open",
+  "head": {
+    "ref": "renovate/compiler",
+    "sha": "0bcd301403a1d5451ab043ccadc9959cde674706"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/compiler",
+  "to": "master"
+}

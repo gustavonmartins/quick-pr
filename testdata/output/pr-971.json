@@ -1,0 +1,15 @@
+{
+  "number": 971,
+  "title": "chore(deps): update dependency androidx.navigation:navigation-compose to v2.9.7",
+  "state": "open",
+  "head": {
+    "ref": "renovate/navigationcompose",
+    "sha": "33f042e980a8f83d16c7354cee168e762488c38c"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/navigationcompose",
+  "to": "master"
+}

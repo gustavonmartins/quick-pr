@@ -1,0 +1,15 @@
+{
+  "number": 858,
+  "title": "chore(deps): update dependency io.nlopez.compose.rules:ktlint to v0.5.6",
+  "state": "open",
+  "head": {
+    "ref": "renovate/ktlint.compose",
+    "sha": "d30915991aac99bf8474fcffbe4994e313ad30a3"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/ktlint.compose",
+  "to": "master"
+}

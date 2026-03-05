@@ -1,0 +1,15 @@
+{
+  "number": 735,
+  "title": "allow searching in feeds",
+  "state": "open",
+  "head": {
+    "ref": "fix-search-for-feeds",
+    "sha": "62ae3465e3d7465d1cb6e07c2125a9f90767467e"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "fix-search-for-feeds",
+  "to": "master"
+}

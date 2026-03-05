@@ -1,0 +1,15 @@
+{
+  "number": 1030,
+  "title": "lang: updated translations from Hosted Weblate",
+  "state": "open",
+  "head": {
+    "ref": "weblate-feeder-android-strings",
+    "sha": "b5676b9477773415dc5b245650be4a8ebdaab25b"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 16,
+  "from": "weblate-feeder-android-strings",
+  "to": "master"
+}

@@ -1,0 +1,15 @@
+{
+  "number": 981,
+  "title": "chore(deps): update dependency org.kodein.di:kodein-di-framework-android-x to v7.31.0",
+  "state": "open",
+  "head": {
+    "ref": "renovate/kodein-di",
+    "sha": "a9400874a26f97b0638896e0ecbbb4286c954770"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/kodein-di",
+  "to": "master"
+}

@@ -1,0 +1,15 @@
+{
+  "number": 352,
+  "title": "Added comparison between read and unread in Compact and Super Compact modes.",
+  "state": "open",
+  "head": {
+    "ref": "master",
+    "sha": "9b13cddecc6caa8bb7332c44906e645c3a7a266d"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "master",
+  "to": "master"
+}

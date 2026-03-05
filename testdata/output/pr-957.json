@@ -1,0 +1,15 @@
+{
+  "number": 957,
+  "title": "chore(deps): update okhttp monorepo to v5.3.2",
+  "state": "open",
+  "head": {
+    "ref": "renovate/okhttp-monorepo",
+    "sha": "6882e0744b712300204f3e19f985e7d191b9b908"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/okhttp-monorepo",
+  "to": "master"
+}

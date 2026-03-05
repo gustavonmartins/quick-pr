@@ -1,0 +1,15 @@
+{
+  "number": 980,
+  "title": "chore(deps): update dependency android to v3.2.0",
+  "state": "open",
+  "head": {
+    "ref": "renovate/android-3.x",
+    "sha": "5b8cdaec4b7f55f2e2fef2010bd5493396c0e8fa"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/android-3.x",
+  "to": "master"
+}

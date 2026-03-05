@@ -1,0 +1,15 @@
+{
+  "number": 1051,
+  "title": "Upgrade to Android Gradle Plugin 9.0.0",
+  "state": "open",
+  "head": {
+    "ref": "agp900",
+    "sha": "35bab8f548531f83ffec2996cf6d25ffefd5b9bf"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "agp900",
+  "to": "master"
+}

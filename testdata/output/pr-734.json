@@ -1,0 +1,15 @@
+{
+  "number": 734,
+  "title": "allow unread filtering",
+  "state": "open",
+  "head": {
+    "ref": "master",
+    "sha": "b3a78fc950c74f4d78274e0ee0084e7e27319719"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "master",
+  "to": "master"
+}

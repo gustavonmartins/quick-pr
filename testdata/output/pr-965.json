@@ -1,0 +1,15 @@
+{
+  "number": 965,
+  "title": "chore(deps): update gradle to v9.4.0",
+  "state": "open",
+  "head": {
+    "ref": "renovate/gradle-9.x",
+    "sha": "f3a238a67d6044016120e56a7135dec7f2cb6224"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/gradle-9.x",
+  "to": "master"
+}

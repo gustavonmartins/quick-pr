@@ -1,0 +1,15 @@
+{
+  "number": 977,
+  "title": "chore(deps): update dependency org.jlleitschuh.gradle.ktlint to v14",
+  "state": "open",
+  "head": {
+    "ref": "renovate/major-ktlint.gradle",
+    "sha": "25f6df367b3d189601768bb363edb007fa111af6"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/major-ktlint.gradle",
+  "to": "master"
+}

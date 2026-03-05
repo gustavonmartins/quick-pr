@@ -1,0 +1,15 @@
+{
+  "number": 967,
+  "title": "chore(deps): update dependency com.ibm.icu:icu4j to v78",
+  "state": "open",
+  "head": {
+    "ref": "renovate/major-icu4j",
+    "sha": "22b83f6d9f22c71f7944562abc5f6f714d1f81a4"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/major-icu4j",
+  "to": "master"
+}

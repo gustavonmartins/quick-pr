@@ -1,0 +1,15 @@
+{
+  "number": 1002,
+  "title": "feat: add markdown parsing for ai summaries (#569, #786)",
+  "state": "open",
+  "head": {
+    "ref": "summary-markdown",
+    "sha": "4ce6fb73aa12e3d8aaa0863fb4e597f07efdad6d"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 2,
+  "from": "summary-markdown",
+  "to": "master"
+}

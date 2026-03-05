@@ -1,0 +1,15 @@
+{
+  "number": 972,
+  "title": "chore(deps): update dependency androidx.compose:compose-bom to v2025.12.01",
+  "state": "open",
+  "head": {
+    "ref": "renovate/compose",
+    "sha": "4b5430782e6e8a7f065b8a2e1a8857a52448471b"
+  },
+  "base": {
+    "ref": "master"
+  },
+  "commits": 1,
+  "from": "renovate/compose",
+  "to": "master"
+}
