@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/spacecowboy/Feeder",
+  "workdir": "./workdir",
+  "merge_strategy": "merge",
+  "setup": [
+    "[ -d {workdir}/.git ] || git clone --bare {repo} {workdir}/.git"
+  ],
+  "per_pr": [
+    "git -C {workdir} worktree remove ./pr-{pr_number} || true",
+    "git -C {workdir} fetch origin pull/{pr_number}/head",
+    "git -C {workdir} worktree add ./pr-{pr_number} {sha}"
+  ],
+  "run": [
+    "go test ./...",
+    "go build"
+  ],
+  "polling_interval_minutes": 15
+}

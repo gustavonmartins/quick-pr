@@ -36,10 +36,39 @@ func BuildSetupCommand(template string, vars CommandVars) string {
 	return BuildCommand(template, vars)
 }
 
+// BuildMergeCommands generates git commands based on the merge strategy
+func BuildMergeCommands(strategy, baseBranch string, vars CommandVars) []string {
+	worktree := fmt.Sprintf("%s/pr-%d", vars.Workdir, vars.PRNumber)
+	fetchCmd := fmt.Sprintf("git -C %s fetch origin %s:refs/remotes/origin/%s",
+		vars.Workdir, baseBranch, baseBranch)
+	switch strategy {
+	case "none", "":
+		return []string{}
+	case "merge":
+		return []string{
+			fetchCmd,
+			fmt.Sprintf("git -C %s merge --no-edit origin/%s", worktree, baseBranch),
+		}
+	case "rebase":
+		return []string{
+			fetchCmd,
+			fmt.Sprintf("git -C %s rebase origin/%s", worktree, baseBranch),
+		}
+	case "squash":
+		return []string{
+			fetchCmd,
+			fmt.Sprintf("git -C %s merge --squash --no-edit origin/%s", worktree, baseBranch),
+		}
+	default:
+		return []string{}
+	}
+}
+
 // ParsedCommands holds the filled-in command templates
 type ParsedCommands struct {
 	Setup []string `json:"setup"`
 	PerPR []string `json:"per_pr"`
+	Merge []string `json:"merge"`
 	Run   []string `json:"run"`
 }
 
@@ -77,6 +106,9 @@ func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error 
 		perPRCmds = append(perPRCmds, BuildCommand(tmpl, vars))
 	}
 
+	// Build merge commands
+	mergeCmds := BuildMergeCommands(config.MergeStrategy, pr.Base.Ref, vars)
+
 	// Create PRWithCommands
 	prWithCmds := PRWithCommands{
 		Number:  pr.Number,
@@ -90,6 +122,7 @@ func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error 
 		Commands: ParsedCommands{
 			Setup: setupCmds,
 			PerPR: perPRCmds,
+			Merge: mergeCmds,
 			Run:   config.Run,
 		},
 	}

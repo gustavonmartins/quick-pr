@@ -1,4 +1,4 @@
 {
   "repository": "https://github.com/seddonym/import-linter",
-  "commands": ["echo 'test'"]
+  "run": ["echo 'test'"]
 }

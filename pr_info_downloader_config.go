@@ -9,10 +9,10 @@ import (
 // Config represents the configuration for quick-ci
 type Config struct {
 	Repository             string   `json:"repository"`
-	Commands               []string `json:"commands"`
 	PollingIntervalMinutes int      `json:"polling_interval_minutes"`
 	ResultsDirectory       string   `json:"results_directory"`
 	Workdir                string   `json:"workdir"`
+	MergeStrategy          string   `json:"merge_strategy"`
 	Setup                  []string `json:"setup"`
 	PerPR                  []string `json:"per_pr"`
 	Run                    []string `json:"run"`
@@ -42,8 +42,8 @@ func LoadConfig(filepath string) (*Config, error) {
 	if config.Repository == "" {
 		return nil, fmt.Errorf("repository is required")
 	}
-	if len(config.Commands) == 0 {
-		return nil, fmt.Errorf("at least one command is required")
+	if len(config.Run) == 0 {
+		return nil, fmt.Errorf("at least one run command is required")
 	}
 
 	return &config, nil
