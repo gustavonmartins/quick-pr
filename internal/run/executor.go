@@ -1,6 +1,7 @@
 package run
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -43,4 +44,51 @@ func ShellExecutor(cmd string) error {
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	return c.Run()
+}
+
+// ExecuteCommandWithOutput runs a command and captures its output
+func ExecuteCommandWithOutput(cmd string) common.CommandResult {
+	c := exec.Command("sh", "-c", cmd)
+
+	var output bytes.Buffer
+	c.Stdout = &output
+	c.Stderr = &output
+
+	err := c.Run()
+
+	// Also print to console for real-time feedback
+	fmt.Print(output.String())
+
+	return common.CommandResult{
+		Command: cmd,
+		Success: err == nil,
+		Output:  output.String(),
+	}
+}
+
+// ExecutePhase runs all commands in a phase and returns the result
+func ExecutePhase(name string, commands []string) common.PhaseResult {
+	result := common.PhaseResult{
+		Name:     name,
+		Success:  true,
+		Commands: make([]common.CommandResult, 0, len(commands)),
+	}
+
+	if len(commands) == 0 {
+		return result
+	}
+
+	fmt.Printf("Running %s commands...\n", name)
+
+	for _, cmd := range commands {
+		cmdResult := ExecuteCommandWithOutput(cmd)
+		result.Commands = append(result.Commands, cmdResult)
+
+		if !cmdResult.Success {
+			result.Success = false
+			return result // Stop at first failure
+		}
+	}
+
+	return result
 }

@@ -31,3 +31,25 @@ type PRWithCommands struct {
 	To       string         `json:"to"`
 	Commands ParsedCommands `json:"commands"`
 }
+
+// CommandResult holds the result of a single command execution
+type CommandResult struct {
+	Command string `json:"command"`
+	Success bool   `json:"success"`
+	Output  string `json:"output,omitempty"`
+}
+
+// PhaseResult holds the result of running a phase (setup, per-PR, merge, run)
+type PhaseResult struct {
+	Name     string          `json:"name"`
+	Success  bool            `json:"success"`
+	Commands []CommandResult `json:"commands"`
+}
+
+// PRResult holds the result of running commands for a PR
+type PRResult struct {
+	Number  int           `json:"number"`
+	Title   string        `json:"title"`
+	Success bool          `json:"success"`
+	Phases  []PhaseResult `json:"phases"`
+}

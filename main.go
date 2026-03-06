@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/yourusername/quick-ci/internal/common"
 	"github.com/yourusername/quick-ci/internal/download"
 	"github.com/yourusername/quick-ci/internal/run"
 )
@@ -76,37 +78,125 @@ func runCommands(dir string) {
 
 	fmt.Printf("Found %d PR files\n", len(files))
 
+	var results []common.PRResult
 	for _, file := range files {
-		processPRFile(file)
+		result := processPRFile(file)
+		results = append(results, result)
 	}
 
-	fmt.Printf("\nDone. Processed %d PRs\n", len(files))
+	// Write results to JSON file
+	resultsFile := filepath.Join(dir, "results.json")
+	writeResults(results, resultsFile)
+
+	// Print summary
+	printSummary(results, resultsFile)
 }
 
-func processPRFile(file string) {
+func processPRFile(file string) common.PRResult {
 	pr, err := run.LoadPRCommands(file)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading %s: %v\n", file, err)
-		os.Exit(1)
+		return common.PRResult{
+			Success: false,
+			Phases: []common.PhaseResult{{
+				Name:    "load",
+				Success: false,
+				Commands: []common.CommandResult{{
+					Command: "load " + file,
+					Success: false,
+					Output:  err.Error(),
+				}},
+			}},
+		}
 	}
 
 	fmt.Printf("\n=== PR #%d: %s ===\n", pr.Number, pr.Title)
 
-	executePhase("setup", pr.Commands.Setup)
-	executePhase("per-PR", pr.Commands.PerPR)
-	executePhase("merge", pr.Commands.Merge)
-	executePhase("CI", pr.Commands.Run)
+	result := common.PRResult{
+		Number:  pr.Number,
+		Title:   pr.Title,
+		Success: true,
+		Phases:  make([]common.PhaseResult, 0, 4),
+	}
 
-	fmt.Printf("PR #%d completed successfully\n", pr.Number)
+	phases := []struct {
+		name     string
+		commands []string
+	}{
+		{"setup", pr.Commands.Setup},
+		{"per-pr", pr.Commands.PerPR},
+		{"merge", pr.Commands.Merge},
+		{"run", pr.Commands.Run},
+	}
+
+	for _, phase := range phases {
+		phaseResult := run.ExecutePhase(phase.name, phase.commands)
+		result.Phases = append(result.Phases, phaseResult)
+
+		if !phaseResult.Success {
+			result.Success = false
+			fmt.Fprintf(os.Stderr, "PR #%d failed at %s phase\n", pr.Number, phase.name)
+			break
+		}
+	}
+
+	if result.Success {
+		fmt.Printf("PR #%d completed successfully\n", pr.Number)
+	}
+
+	return result
 }
 
-func executePhase(name string, commands []string) {
-	if len(commands) == 0 {
+func writeResults(results []common.PRResult, filename string) {
+	data, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error marshaling results: %v\n", err)
 		return
 	}
-	fmt.Printf("Running %s commands...\n", name)
-	if err := run.ExecuteCommands(commands, run.ShellExecutor); err != nil {
-		fmt.Fprintf(os.Stderr, "%s failed: %v\n", name, err)
+
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing results file: %v\n", err)
+		return
+	}
+}
+
+func printSummary(results []common.PRResult, resultsFile string) {
+	var succeeded, failed int
+	for _, r := range results {
+		if r.Success {
+			succeeded++
+		} else {
+			failed++
+		}
+	}
+
+	fmt.Printf("\n========== SUMMARY ==========\n")
+	fmt.Printf("Total: %d PRs\n", len(results))
+	fmt.Printf("Succeeded: %d\n", succeeded)
+	fmt.Printf("Failed: %d\n", failed)
+
+	if failed > 0 {
+		fmt.Printf("\nFailed PRs:\n")
+		for _, r := range results {
+			if !r.Success {
+				failedPhase := findFailedPhase(r)
+				fmt.Printf("  - PR #%d (%s): failed at %s\n", r.Number, r.Title, failedPhase)
+			}
+		}
+	}
+
+	fmt.Printf("\nResults written to: %s\n", resultsFile)
+
+	if failed > 0 {
 		os.Exit(1)
 	}
+}
+
+func findFailedPhase(r common.PRResult) string {
+	for _, phase := range r.Phases {
+		if !phase.Success {
+			return phase.Name
+		}
+	}
+	return "unknown"
 }
