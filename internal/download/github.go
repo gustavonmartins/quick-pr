@@ -1,4 +1,4 @@
-package main
+package download
 
 import (
 	"encoding/json"
@@ -8,49 +8,40 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/yourusername/quick-ci/internal/common"
 )
 
-// httpClient is the HTTP client used for API requests.
+// HTTPClient is the HTTP client used for API requests.
 // It can be replaced in tests to use a recording/caching transport.
-var httpClient = http.DefaultClient
+var HTTPClient = http.DefaultClient
 
-// PullRequest represents a pull request
+// PullRequest represents a pull request from GitHub API
 type PullRequest struct {
-	Number  int    `json:"number"`
-	Title   string `json:"title"`
-	State   string `json:"state"`
-	Head    Head   `json:"head"`
-	Base    Base   `json:"base"`
-	Commits int    `json:"commits"`
-	From    string `json:"from"`
-	To      string `json:"to"`
-}
-
-// Head represents the head branch information
-type Head struct {
-	Ref string `json:"ref"`
-	SHA string `json:"sha"`
-}
-
-// Base represents the base branch information
-type Base struct {
-	Ref string `json:"ref"`
+	Number  int         `json:"number"`
+	Title   string      `json:"title"`
+	State   string      `json:"state"`
+	Head    common.Head `json:"head"`
+	Base    common.Base `json:"base"`
+	Commits int         `json:"commits"`
+	From    string      `json:"from"`
+	To      string      `json:"to"`
 }
 
 // FetchPullRequests fetches open pull requests from the repository
 func FetchPullRequests(config *Config) ([]PullRequest, error) {
-	owner, repo, err := parseGitHubURL(config.Repository)
+	owner, repo, err := ParseGitHubURL(config.Repository)
 	if err != nil {
 		return nil, err
 	}
 
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/pulls?state=open", owner, repo)
 
-	resp, err := httpClient.Get(url)
+	resp, err := HTTPClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch PRs: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
@@ -77,11 +68,11 @@ func FetchPullRequests(config *Config) ([]PullRequest, error) {
 func fetchSinglePR(owner, repo string, prNumber int) (*PullRequest, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/pulls/%d", owner, repo, prNumber)
 
-	resp, err := httpClient.Get(url)
+	resp, err := HTTPClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch PR: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
@@ -99,8 +90,8 @@ func fetchSinglePR(owner, repo string, prNumber int) (*PullRequest, error) {
 	return &pr, nil
 }
 
-// parseGitHubURL extracts owner and repo from a GitHub URL
-func parseGitHubURL(repoURL string) (owner, repo string, err error) {
+// ParseGitHubURL extracts owner and repo from a GitHub URL
+func ParseGitHubURL(repoURL string) (owner, repo string, err error) {
 	// Remove .git suffix if present
 	repoURL = strings.TrimSuffix(repoURL, ".git")
 

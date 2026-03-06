@@ -6,16 +6,46 @@ linters:
     - gocognit
     - govet
     - errcheck
+    - depguard
+  settings:
+    gocyclo:
+      min-complexity: 10
+    gocognit:
+      min-complexity: 15
+    depguard:
+      rules:
+        Main:
+          files:
+            - "$all"
+          list-mode: lax
+          allow:
+            - "$gostd"
+            - "github.com/yourusername/quick-ci"
+        download-isolation:
+          files:
+            - "**/internal/download/**"
+          list-mode: lax
+          deny:
+            - pkg: "github.com/yourusername/quick-ci/internal/run"
+              desc: "download package cannot import run package"
+        run-isolation:
+          files:
+            - "**/internal/run/**"
+          list-mode: lax
+          deny:
+            - pkg: "github.com/yourusername/quick-ci/internal/download"
+              desc: "run package cannot import download package"
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - gocognit
 
 formatters:
   enable:
     - gofmt
-
-linters-settings:
-  gocyclo:
-    min-complexity: 10
-  gocognit:
-    min-complexity: 15
 
 run:
   timeout: 1m

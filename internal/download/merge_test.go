@@ -1,9 +1,11 @@
-package main
+package download
 
 import (
 	"encoding/json"
 	"os"
 	"testing"
+
+	"github.com/yourusername/quick-ci/internal/common"
 )
 
 func TestConfigWithMergeStrategy_LoadsCorrectly(t *testing.T) {
@@ -15,9 +17,11 @@ func TestConfigWithMergeStrategy_LoadsCorrectly(t *testing.T) {
 		"run": ["go test ./..."]
 	}`
 
-	tmpFile := "testdata/config_with_merge_strategy.json"
-	os.MkdirAll("testdata", 0755)
-	defer os.Remove(tmpFile)
+	tmpFile := "../../testdata/config_with_merge_strategy.json"
+	if err := os.MkdirAll("../../testdata", 0755); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	err := os.WriteFile(tmpFile, []byte(configJSON), 0644)
 	if err != nil {
@@ -169,11 +173,11 @@ func TestSavePRWithCommands_IncludesMergeCommands(t *testing.T) {
 		From:    "feature-branch",
 		To:      "main",
 		Commits: 3,
-		Head: Head{
+		Head: common.Head{
 			Ref: "feature-branch",
 			SHA: "abc123",
 		},
-		Base: Base{
+		Base: common.Base{
 			Ref: "main",
 		},
 	}
@@ -186,9 +190,9 @@ func TestSavePRWithCommands_IncludesMergeCommands(t *testing.T) {
 	}
 
 	// And: A clean output directory
-	outputDir := "testdata/merge_output"
-	os.RemoveAll(outputDir)
-	defer os.RemoveAll(outputDir)
+	outputDir := "../../testdata/merge_output"
+	_ = os.RemoveAll(outputDir)
+	defer func() { _ = os.RemoveAll(outputDir) }()
 
 	// When: We save the PR with commands
 	err := SavePRWithCommands(pr, config, outputDir)
@@ -204,7 +208,7 @@ func TestSavePRWithCommands_IncludesMergeCommands(t *testing.T) {
 		t.Fatalf("Failed to read saved file: %v", err)
 	}
 
-	var savedPR PRWithCommands
+	var savedPR common.PRWithCommands
 	if err := json.Unmarshal(data, &savedPR); err != nil {
 		t.Fatalf("Failed to parse saved JSON: %v", err)
 	}
@@ -212,72 +216,6 @@ func TestSavePRWithCommands_IncludesMergeCommands(t *testing.T) {
 	// Verify merge commands are present
 	if len(savedPR.Commands.Merge) == 0 {
 		t.Error("Expected merge commands in saved PR, got empty slice")
-	}
-}
-
-func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
-	// Given: A PR with setup, per_pr, merge, and run commands
-	prJSON := PRWithCommands{
-		Number: 200,
-		Commands: ParsedCommands{
-			Setup: []string{"setup-cmd"},
-			PerPR: []string{"per-pr-cmd"},
-			Merge: []string{"merge-cmd"},
-			Run:   []string{"run-cmd"},
-		},
-	}
-
-	// Write to temp file
-	tmpDir := "testdata/merge_runner_test"
-	os.MkdirAll(tmpDir, 0755)
-	defer os.RemoveAll(tmpDir)
-
-	data, _ := json.MarshalIndent(prJSON, "", "  ")
-	os.WriteFile(tmpDir+"/pr-200.json", data, 0644)
-
-	// And: A mock executor that records execution order
-	var executionOrder []string
-	mockExecutor := func(cmd string) error {
-		executionOrder = append(executionOrder, cmd)
-		return nil
-	}
-
-	// When: We load and execute commands
-	loaded, err := LoadPRCommands(tmpDir + "/pr-200.json")
-	if err != nil {
-		t.Fatalf("Failed to load PR: %v", err)
-	}
-
-	// Execute in order: setup, per_pr, merge, run
-	ExecuteCommands(loaded.Commands.Setup, mockExecutor)
-	ExecuteCommands(loaded.Commands.PerPR, mockExecutor)
-	ExecuteCommands(loaded.Commands.Merge, mockExecutor)
-	ExecuteCommands(loaded.Commands.Run, mockExecutor)
-
-	// Then: Commands should be executed in the correct order
-	expectedOrder := []string{"setup-cmd", "per-pr-cmd", "merge-cmd", "run-cmd"}
-
-	if len(executionOrder) != len(expectedOrder) {
-		t.Fatalf("Expected %d commands executed, got %d: %v", len(expectedOrder), len(executionOrder), executionOrder)
-	}
-
-	for i, expected := range expectedOrder {
-		if executionOrder[i] != expected {
-			t.Errorf("Command %d: expected '%s', got '%s'", i, expected, executionOrder[i])
-		}
-	}
-
-	// Verify merge comes after per_pr and before run
-	perPRIndex := indexOf(executionOrder, "per-pr-cmd")
-	mergeIndex := indexOf(executionOrder, "merge-cmd")
-	runIndex := indexOf(executionOrder, "run-cmd")
-
-	if mergeIndex <= perPRIndex {
-		t.Errorf("Merge should execute after per_pr: per_pr at %d, merge at %d", perPRIndex, mergeIndex)
-	}
-
-	if mergeIndex >= runIndex {
-		t.Errorf("Merge should execute before run: merge at %d, run at %d", mergeIndex, runIndex)
 	}
 }
 
@@ -303,14 +241,4 @@ func containsStringImpl(s, sub string) bool {
 		}
 	}
 	return false
-}
-
-// Helper function to find index of string in slice
-func indexOf(slice []string, item string) int {
-	for i, s := range slice {
-		if s == item {
-			return i
-		}
-	}
-	return -1
 }

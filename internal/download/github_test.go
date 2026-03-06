@@ -1,4 +1,4 @@
-package main
+package download
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 
 func TestFetchOpenPRsFromFeederRepo(t *testing.T) {
 	// Given: Config with Feeder repository
-	config, err := LoadConfig("testdata/feeder_config.json")
+	config, err := LoadConfig("../../testdata/feeder_config.json")
 	if err != nil {
 		t.Fatalf("Failed to load config: %v", err)
 	}
@@ -17,25 +17,25 @@ func TestFetchOpenPRsFromFeederRepo(t *testing.T) {
 	// When: We fetch open pull requests
 	prs, err := FetchPullRequests(config)
 
-	// Then: We should get 18 open PRs
+	// Then: We should get 19 open PRs
 	if err != nil {
 		t.Fatalf("Failed to fetch PRs: %v", err)
 	}
 
 	if len(prs) != 19 {
-		t.Errorf("Expected 18 open PRs, got %d", len(prs))
+		t.Errorf("Expected 19 open PRs, got %d", len(prs))
 	}
 }
 
 func TestFetchPR1030Details(t *testing.T) {
 	// Given: Config with Feeder repository
-	config, err := LoadConfig("testdata/feeder_config.json")
+	config, err := LoadConfig("../../testdata/feeder_config.json")
 	if err != nil {
 		t.Fatalf("Failed to load config: %v", err)
 	}
 
 	// Load expected output
-	expected, err := LoadExpectedPR("testdata/pr_1030_expected.json")
+	expected, err := loadExpectedPR("../../testdata/pr_1030_expected.json")
 	if err != nil {
 		t.Fatalf("Failed to load expected output: %v", err)
 	}
@@ -74,8 +74,8 @@ func TestFetchPR1030Details(t *testing.T) {
 	}
 }
 
-// LoadExpectedPR loads expected PR data from a JSON file
-func LoadExpectedPR(filepath string) (*PullRequest, error) {
+// loadExpectedPR loads expected PR data from a JSON file
+func loadExpectedPR(filepath string) (*PullRequest, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
@@ -91,14 +91,14 @@ func LoadExpectedPR(filepath string) (*PullRequest, error) {
 
 func TestSavePRsToOutputFolder(t *testing.T) {
 	// Given: Config with Feeder repository
-	config, err := LoadConfig("testdata/feeder_config.json")
+	config, err := LoadConfig("../../testdata/feeder_config.json")
 	if err != nil {
 		t.Fatalf("Failed to load config: %v", err)
 	}
 
 	// And: A clean output directory
-	outputDir := "testdata/output"
-	os.RemoveAll(outputDir)
+	outputDir := "../../testdata/output"
+	_ = os.RemoveAll(outputDir)
 
 	// When: We fetch PRs and save them
 	prs, err := FetchPullRequests(config)

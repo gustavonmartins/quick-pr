@@ -1,20 +1,22 @@
-package main
+package run
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/yourusername/quick-ci/internal/common"
 )
 
 // LoadPRCommands loads a PR with commands from a JSON file
-func LoadPRCommands(filepath string) (*PRWithCommands, error) {
+func LoadPRCommands(filepath string) (*common.PRWithCommands, error) {
 	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	var pr PRWithCommands
+	var pr common.PRWithCommands
 	if err := json.Unmarshal(data, &pr); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}

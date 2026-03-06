@@ -1,4 +1,4 @@
-package main
+package download
 
 import (
 	"bytes"
@@ -12,9 +12,9 @@ import (
 
 func init() {
 	// Replace the default HTTP client with a recording/caching transport
-	httpClient = &http.Client{
+	HTTPClient = &http.Client{
 		Transport: &RecordingTransport{
-			cacheDir: "testdata/cache",
+			cacheDir: "../../testdata/cache",
 			real:     http.DefaultTransport,
 		},
 	}
@@ -49,7 +49,9 @@ func (r *RecordingTransport) RoundTrip(req *http.Request) (*http.Response, error
 
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
+	if err := resp.Body.Close(); err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}

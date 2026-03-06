@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/yourusername/quick-ci/internal/download"
+	"github.com/yourusername/quick-ci/internal/run"
 )
 
 func main() {
@@ -32,14 +35,14 @@ func main() {
 }
 
 func downloadPRs(configPath, outputDir string) {
-	config, err := LoadConfig(configPath)
+	config, err := download.LoadConfig(configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 		os.Exit(1)
 	}
 
 	fmt.Printf("Fetching PRs from %s...\n", config.Repository)
-	prs, err := FetchPullRequests(config)
+	prs, err := download.FetchPullRequests(config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error fetching PRs: %v\n", err)
 		os.Exit(1)
@@ -48,7 +51,7 @@ func downloadPRs(configPath, outputDir string) {
 	fmt.Printf("Found %d open PRs\n", len(prs))
 
 	for _, pr := range prs {
-		err := SavePRWithCommands(pr, config, outputDir)
+		err := download.SavePRWithCommands(pr, config, outputDir)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error saving PR #%d: %v\n", pr.Number, err)
 			os.Exit(1)
@@ -74,52 +77,36 @@ func runCommands(dir string) {
 	fmt.Printf("Found %d PR files\n", len(files))
 
 	for _, file := range files {
-		pr, err := LoadPRCommands(file)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading %s: %v\n", file, err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n=== PR #%d: %s ===\n", pr.Number, pr.Title)
-
-		// Run setup commands
-		if len(pr.Commands.Setup) > 0 {
-			fmt.Println("Running setup commands...")
-			if err := ExecuteCommands(pr.Commands.Setup, ShellExecutor); err != nil {
-				fmt.Fprintf(os.Stderr, "Setup failed: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		// Run per-PR commands
-		if len(pr.Commands.PerPR) > 0 {
-			fmt.Println("Running per-PR commands...")
-			if err := ExecuteCommands(pr.Commands.PerPR, ShellExecutor); err != nil {
-				fmt.Fprintf(os.Stderr, "Per-PR commands failed: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		// Run merge commands
-		if len(pr.Commands.Merge) > 0 {
-			fmt.Println("Running merge commands...")
-			if err := ExecuteCommands(pr.Commands.Merge, ShellExecutor); err != nil {
-				fmt.Fprintf(os.Stderr, "Merge commands failed: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		// Run CI commands
-		if len(pr.Commands.Run) > 0 {
-			fmt.Println("Running CI commands...")
-			if err := ExecuteCommands(pr.Commands.Run, ShellExecutor); err != nil {
-				fmt.Fprintf(os.Stderr, "CI commands failed: %v\n", err)
-				os.Exit(1)
-			}
-		}
-
-		fmt.Printf("PR #%d completed successfully\n", pr.Number)
+		processPRFile(file)
 	}
 
 	fmt.Printf("\nDone. Processed %d PRs\n", len(files))
+}
+
+func processPRFile(file string) {
+	pr, err := run.LoadPRCommands(file)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading %s: %v\n", file, err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\n=== PR #%d: %s ===\n", pr.Number, pr.Title)
+
+	executePhase("setup", pr.Commands.Setup)
+	executePhase("per-PR", pr.Commands.PerPR)
+	executePhase("merge", pr.Commands.Merge)
+	executePhase("CI", pr.Commands.Run)
+
+	fmt.Printf("PR #%d completed successfully\n", pr.Number)
+}
+
+func executePhase(name string, commands []string) {
+	if len(commands) == 0 {
+		return
+	}
+	fmt.Printf("Running %s commands...\n", name)
+	if err := run.ExecuteCommands(commands, run.ShellExecutor); err != nil {
+		fmt.Fprintf(os.Stderr, "%s failed: %v\n", name, err)
+		os.Exit(1)
+	}
 }

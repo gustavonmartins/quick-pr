@@ -1,4 +1,4 @@
-package main
+package download
 
 import (
 	"encoding/json"
@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/yourusername/quick-ci/internal/common"
 )
 
 // CommandVars holds the variables for command template substitution
@@ -64,27 +66,6 @@ func BuildMergeCommands(strategy, baseBranch string, vars CommandVars) []string 
 	}
 }
 
-// ParsedCommands holds the filled-in command templates
-type ParsedCommands struct {
-	Setup []string `json:"setup"`
-	PerPR []string `json:"per_pr"`
-	Merge []string `json:"merge"`
-	Run   []string `json:"run"`
-}
-
-// PRWithCommands combines PR data with parsed commands
-type PRWithCommands struct {
-	Number   int            `json:"number"`
-	Title    string         `json:"title"`
-	State    string         `json:"state"`
-	Head     Head           `json:"head"`
-	Base     Base           `json:"base"`
-	Commits  int            `json:"commits"`
-	From     string         `json:"from"`
-	To       string         `json:"to"`
-	Commands ParsedCommands `json:"commands"`
-}
-
 // SavePRWithCommands saves a PR with its parsed commands to a JSON file
 func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error {
 	vars := CommandVars{
@@ -110,7 +91,7 @@ func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error 
 	mergeCmds := BuildMergeCommands(config.MergeStrategy, pr.Base.Ref, vars)
 
 	// Create PRWithCommands
-	prWithCmds := PRWithCommands{
+	prWithCmds := common.PRWithCommands{
 		Number:  pr.Number,
 		Title:   pr.Title,
 		State:   pr.State,
@@ -119,7 +100,7 @@ func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error 
 		Commits: pr.Commits,
 		From:    pr.From,
 		To:      pr.To,
-		Commands: ParsedCommands{
+		Commands: common.ParsedCommands{
 			Setup: setupCmds,
 			PerPR: perPRCmds,
 			Merge: mergeCmds,
