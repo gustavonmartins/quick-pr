@@ -22,3 +22,9 @@ quick-ci
 
 # HTTP cache
 .quick-ci-cache/
+
+# CI workdir (cloned repos)
+workdir/
+
+# CI run results (generated)
+**/results.json
