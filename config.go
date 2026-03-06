@@ -12,6 +12,10 @@ type Config struct {
 	Commands               []string `json:"commands"`
 	PollingIntervalMinutes int      `json:"polling_interval_minutes"`
 	ResultsDirectory       string   `json:"results_directory"`
+	Workdir                string   `json:"workdir"`
+	Setup                  []string `json:"setup"`
+	PerPR                  []string `json:"per_pr"`
+	Run                    []string `json:"run"`
 }
 
 // LoadConfig loads and parses the configuration file

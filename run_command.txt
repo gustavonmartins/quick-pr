@@ -1,0 +1,1 @@
+go run . -config testdata/import_linter_config.json -output testdata/import_linter_output -cache testdata/import_linter_cache
