@@ -1,4 +1,4 @@
-package download
+package main
 
 import (
 	"bytes"
@@ -8,21 +8,21 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/yourusername/quick-ci/internal/download"
 )
 
 func init() {
 	// Replace the default HTTP client with a recording/caching transport
-	HTTPClient = &http.Client{
+	download.HTTPClient = &http.Client{
 		Transport: &RecordingTransport{
-			cacheDir: "../../testdata/cache",
+			cacheDir: "testdata/cache",
 			real:     http.DefaultTransport,
 		},
 	}
 }
 
 // RecordingTransport is an http.RoundTripper that caches HTTP responses.
-// On first request: calls real HTTP, saves response to cache.
-// On subsequent requests: returns cached response, no network call.
 type RecordingTransport struct {
 	cacheDir string
 	real     http.RoundTripper
@@ -33,7 +33,6 @@ func (r *RecordingTransport) RoundTrip(req *http.Request) (*http.Response, error
 
 	// Try cache first
 	if data, err := os.ReadFile(cacheFile); err == nil {
-		// Cache HIT
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewReader(data)),
@@ -47,16 +46,14 @@ func (r *RecordingTransport) RoundTrip(req *http.Request) (*http.Response, error
 		return nil, err
 	}
 
-	// Read response body
 	body, err := io.ReadAll(resp.Body)
-	if err := resp.Body.Close(); err != nil {
-		return nil, err
+	if closeErr := resp.Body.Close(); closeErr != nil {
+		return nil, closeErr
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	// Save to cache (only for successful responses)
 	if resp.StatusCode == http.StatusOK {
 		if err := os.MkdirAll(filepath.Dir(cacheFile), 0755); err != nil {
 			return nil, err
@@ -66,13 +63,11 @@ func (r *RecordingTransport) RoundTrip(req *http.Request) (*http.Response, error
 		}
 	}
 
-	// Return response with body restored
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 	return resp, nil
 }
 
 func (r *RecordingTransport) cacheFilePath(req *http.Request) string {
-	// Create a unique filename based on method + URL
 	key := req.Method + "_" + req.URL.String()
 	hash := sha256.Sum256([]byte(key))
 	filename := fmt.Sprintf("%x.json", hash[:8])

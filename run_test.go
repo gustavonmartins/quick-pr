@@ -1,4 +1,4 @@
-package run
+package main
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/yourusername/quick-ci/internal/common"
+	"github.com/yourusername/quick-ci/internal/run"
 )
 
 func TestLoadPRCommandsFromJSON(t *testing.T) {
-	// Given: A PR JSON file with commands
 	prJSON := common.PRWithCommands{
 		Number: 735,
 		Commands: common.ParsedCommands{
@@ -23,8 +23,7 @@ func TestLoadPRCommandsFromJSON(t *testing.T) {
 		},
 	}
 
-	// Write to temp file
-	tmpDir := "../../testdata/runner_test"
+	tmpDir := "testdata/runner_test"
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -35,10 +34,7 @@ func TestLoadPRCommandsFromJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// When: We load commands from the file
-	loaded, err := LoadPRCommands(tmpDir + "/pr-735.json")
-
-	// Then: Commands are parsed correctly
+	loaded, err := run.LoadPRCommands(tmpDir + "/pr-735.json")
 	if err != nil {
 		t.Fatalf("Failed to load: %v", err)
 	}
@@ -55,7 +51,6 @@ func TestLoadPRCommandsFromJSON(t *testing.T) {
 }
 
 func TestExecuteCommandsWithMock(t *testing.T) {
-	// Given: A mock executor that records calls
 	var executed []string
 	mockExecutor := func(cmd string) error {
 		executed = append(executed, cmd)
@@ -64,10 +59,7 @@ func TestExecuteCommandsWithMock(t *testing.T) {
 
 	commands := []string{"cmd1", "cmd2", "cmd3"}
 
-	// When: We execute commands
-	err := ExecuteCommands(commands, mockExecutor)
-
-	// Then: All commands were executed in order
+	err := run.ExecuteCommands(commands, mockExecutor)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -84,7 +76,6 @@ func TestExecuteCommandsWithMock(t *testing.T) {
 }
 
 func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
-	// Given: A PR with setup, per_pr, merge, and run commands
 	prJSON := common.PRWithCommands{
 		Number: 200,
 		Commands: common.ParsedCommands{
@@ -95,8 +86,7 @@ func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
 		},
 	}
 
-	// Write to temp file
-	tmpDir := "../../testdata/merge_runner_test"
+	tmpDir := "testdata/merge_runner_test"
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -107,34 +97,30 @@ func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// And: A mock executor that records execution order
 	var executionOrder []string
 	mockExecutor := func(cmd string) error {
 		executionOrder = append(executionOrder, cmd)
 		return nil
 	}
 
-	// When: We load and execute commands
-	loaded, err := LoadPRCommands(tmpDir + "/pr-200.json")
+	loaded, err := run.LoadPRCommands(tmpDir + "/pr-200.json")
 	if err != nil {
 		t.Fatalf("Failed to load PR: %v", err)
 	}
 
-	// Execute in order: setup, per_pr, merge, run
-	if err := ExecuteCommands(loaded.Commands.Setup, mockExecutor); err != nil {
+	if err := run.ExecuteCommands(loaded.Commands.Setup, mockExecutor); err != nil {
 		t.Fatal(err)
 	}
-	if err := ExecuteCommands(loaded.Commands.PerPR, mockExecutor); err != nil {
+	if err := run.ExecuteCommands(loaded.Commands.PerPR, mockExecutor); err != nil {
 		t.Fatal(err)
 	}
-	if err := ExecuteCommands(loaded.Commands.Merge, mockExecutor); err != nil {
+	if err := run.ExecuteCommands(loaded.Commands.Merge, mockExecutor); err != nil {
 		t.Fatal(err)
 	}
-	if err := ExecuteCommands(loaded.Commands.Run, mockExecutor); err != nil {
+	if err := run.ExecuteCommands(loaded.Commands.Run, mockExecutor); err != nil {
 		t.Fatal(err)
 	}
 
-	// Then: Commands should be executed in the correct order
 	expectedOrder := []string{"setup-cmd", "per-pr-cmd", "merge-cmd", "run-cmd"}
 
 	if len(executionOrder) != len(expectedOrder) {
@@ -147,7 +133,6 @@ func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
 		}
 	}
 
-	// Verify merge comes after per_pr and before run
 	perPRIndex := indexOf(executionOrder, "per-pr-cmd")
 	mergeIndex := indexOf(executionOrder, "merge-cmd")
 	runIndex := indexOf(executionOrder, "run-cmd")
@@ -161,7 +146,6 @@ func TestRunCommands_ExecutesMergeBetweenPerPRAndRun(t *testing.T) {
 	}
 }
 
-// Helper function to find index of string in slice
 func indexOf(slice []string, item string) int {
 	for i, s := range slice {
 		if s == item {
