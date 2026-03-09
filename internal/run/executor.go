@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/yourusername/quick-ci/internal/common"
 )
 
 // LoadPRCommands loads a PR with commands from a JSON file
-func LoadPRCommands(filepath string) (*common.PRWithCommands, error) {
-	data, err := os.ReadFile(filepath)
+func LoadPRCommands(filePath string) (*common.PRWithCommands, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
@@ -82,6 +83,55 @@ func ExecutePhase(name string, commands []string) common.PhaseResult {
 
 	for _, cmd := range commands {
 		cmdResult := ExecuteCommandWithOutput(cmd)
+		result.Commands = append(result.Commands, cmdResult)
+
+		if !cmdResult.Success {
+			result.Success = false
+			return result // Stop at first failure
+		}
+	}
+
+	return result
+}
+
+// ShouldRunSetup checks if the setup phase should execute.
+// Returns true if workdir/.git does NOT exist (setup is needed).
+// Returns false if workdir/.git exists (setup should be skipped).
+func ShouldRunSetup(workdir string) bool {
+	gitDir := filepath.Join(workdir, ".git")
+	_, err := os.Stat(gitDir)
+	return os.IsNotExist(err)
+}
+
+// ExecuteSetupPhase runs setup commands only if ShouldRunSetup returns true
+func ExecuteSetupPhase(commands []string, workdir string, executor CommandExecutor) common.PhaseResult {
+	if !ShouldRunSetup(workdir) {
+		// workdir/.git exists, skip setup
+		return common.PhaseResult{
+			Name:     "setup",
+			Success:  true,
+			Commands: []common.CommandResult{},
+		}
+	}
+	// workdir/.git does not exist, run setup commands using the provided executor
+	result := common.PhaseResult{
+		Name:     "setup",
+		Success:  true,
+		Commands: make([]common.CommandResult, 0, len(commands)),
+	}
+
+	if len(commands) == 0 {
+		return result
+	}
+
+	fmt.Printf("Running setup commands...\n")
+
+	for _, cmd := range commands {
+		err := executor(cmd)
+		cmdResult := common.CommandResult{
+			Command: cmd,
+			Success: err == nil,
+		}
 		result.Commands = append(result.Commands, cmdResult)
 
 		if !cmdResult.Success {

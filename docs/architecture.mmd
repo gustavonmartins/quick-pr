@@ -1,0 +1,47 @@
+sequenceDiagram
+    participant User
+    participant Main as main.go
+    participant Config as download/config
+    participant GitHub as download/github
+    participant Commands as download/commands
+    participant Executor as run/executor
+    participant Shell as sh -c
+
+    rect rgb(200, 220, 255)
+        Note over User,Commands: Download Mode (-config -output)
+        User->>Main: -config config.json -output ./out
+        Main->>Config: LoadConfig(path)
+        Config-->>Main: Config struct
+        Main->>GitHub: FetchPullRequests(config)
+        GitHub->>GitHub: ParseGitHubURL()
+        GitHub->>GitHub: GET /repos/{owner}/{repo}/pulls
+        loop For each PR
+            GitHub->>GitHub: GET /repos/{owner}/{repo}/pulls/{n}
+        end
+        GitHub-->>Main: []PullRequest
+        loop For each PR
+            Main->>Commands: SavePRWithCommands(pr, config, dir)
+            Commands->>Commands: BuildCommand() with {repo}, {workdir}, {sha}
+            Commands->>Commands: BuildMergeCommands(strategy)
+            Commands-->>Main: pr-{number}.json
+        end
+    end
+
+    rect rgb(220, 255, 220)
+        Note over User,Shell: Run Mode (-run)
+        User->>Main: -run ./out
+        Main->>Main: glob pr-*.json
+        loop For each PR file
+            Main->>Executor: LoadPRCommands(file)
+            Executor-->>Main: PRWithCommands
+            loop phases: setup, per_pr, merge, run
+                Main->>Executor: ExecutePhase(name, cmds)
+                loop For each command
+                    Executor->>Shell: sh -c "command"
+                    Shell-->>Executor: stdout, stderr, exit code
+                end
+                Executor-->>Main: PhaseResult
+            end
+        end
+        Main->>Main: Write results.json
+    end

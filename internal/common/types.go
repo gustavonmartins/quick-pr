@@ -29,6 +29,7 @@ type PRWithCommands struct {
 	Commits  int            `json:"commits"`
 	From     string         `json:"from"`
 	To       string         `json:"to"`
+	Workdir  string         `json:"workdir"`
 	Commands ParsedCommands `json:"commands"`
 }
 

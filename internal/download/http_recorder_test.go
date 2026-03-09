@@ -1,4 +1,4 @@
-package main
+package download
 
 import (
 	"bytes"
@@ -8,15 +8,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/yourusername/quick-ci/internal/download"
 )
 
 func init() {
 	// Replace the default HTTP client with a recording/caching transport
-	download.HTTPClient = &http.Client{
+	HTTPClient = &http.Client{
 		Transport: &RecordingTransport{
-			cacheDir: "testdata/cache",
+			cacheDir: "../../testdata/cache",
 			real:     http.DefaultTransport,
 		},
 	}

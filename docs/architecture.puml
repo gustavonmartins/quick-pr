@@ -1,0 +1,89 @@
+@startuml
+!theme plain
+title Quick-CI Sequence Diagram
+
+participant User
+participant "main.go" as Main
+participant "download/config" as Config
+participant "download/github" as GitHub
+participant "download/commands" as Commands
+participant "run/executor" as Executor
+participant "sh -c" as Shell
+
+== Download Mode (-config -output) ==
+
+User -> Main: -config config.json -output ./out
+activate Main
+
+Main -> Config: LoadConfig(path)
+activate Config
+Config -> Config: Validate & apply defaults
+Config --> Main: Config struct
+deactivate Config
+
+Main -> GitHub: FetchPullRequests(config)
+activate GitHub
+GitHub -> GitHub: ParseGitHubURL(repository)
+GitHub -> GitHub: GET /repos/{owner}/{repo}/pulls?state=open
+
+loop For each open PR
+    GitHub -> GitHub: GET /repos/{owner}/{repo}/pulls/{number}
+    note right: Get commits count,\nhead SHA, base ref
+end
+
+GitHub --> Main: []PullRequest
+deactivate GitHub
+
+loop For each PullRequest
+    Main -> Commands: SavePRWithCommands(pr, config, outputDir)
+    activate Commands
+    Commands -> Commands: BuildCommand(template, vars)
+    note right: Substitute:\n{repo}, {workdir},\n{pr_number}, {sha}
+    Commands -> Commands: BuildMergeCommands(strategy)
+    note right: merge/rebase/squash/none
+    Commands -> Commands: Write JSON file
+    Commands --> Main: pr-{number}.json
+    deactivate Commands
+end
+
+deactivate Main
+
+== Run Mode (-run) ==
+
+User -> Main: -run ./out
+activate Main
+
+Main -> Main: glob("pr-*.json")
+
+loop For each PR file
+    Main -> Executor: LoadPRCommands(file)
+    activate Executor
+    Executor --> Main: PRWithCommands
+    deactivate Executor
+
+    loop phases: [setup, per_pr, merge, run]
+        Main -> Executor: ExecutePhase(phaseName, commands)
+        activate Executor
+
+        loop For each command in phase
+            Executor -> Shell: sh -c "command"
+            activate Shell
+            Shell --> Executor: stdout + stderr, exit code
+            deactivate Shell
+
+            alt exit code != 0
+                Executor --> Main: PhaseResult(success=false)
+                note right: Stop phase on first failure
+            end
+        end
+
+        Executor --> Main: PhaseResult
+        deactivate Executor
+    end
+end
+
+Main -> Main: Write results.json
+Main --> User: Exit with status (0 or 1)
+deactivate Main
+
+@enduml

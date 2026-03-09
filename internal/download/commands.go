@@ -28,13 +28,8 @@ func BuildCommand(template string, vars CommandVars) string {
 	return result
 }
 
-// BuildSetupCommand returns the setup command, or empty string if workdir already exists
+// BuildSetupCommand returns the setup command with variables substituted
 func BuildSetupCommand(template string, vars CommandVars) string {
-	gitDir := vars.Workdir + "/.git"
-	if _, err := os.Stat(gitDir); err == nil {
-		// workdir/.git exists, skip setup
-		return ""
-	}
 	return BuildCommand(template, vars)
 }
 
@@ -100,6 +95,7 @@ func SavePRWithCommands(pr PullRequest, config *Config, outputDir string) error 
 		Commits: pr.Commits,
 		From:    pr.From,
 		To:      pr.To,
+		Workdir: config.Workdir,
 		Commands: common.ParsedCommands{
 			Setup: setupCmds,
 			PerPR: perPRCmds,
